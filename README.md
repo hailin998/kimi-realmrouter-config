@@ -27,3 +27,26 @@ bash config_kimi_realmrouter.sh
 - 脚本不会安装 Kimi CLI，只负责配置
 - API key 会保存到 macOS Keychain，不会明文写进 `~/.kimi/config.toml`
 - 配置完成后，重新打开终端执行 `KIMI` 即可
+
+
+## Windows
+
+PowerShell 一键配置：
+
+```powershell
+irm https://raw.githubusercontent.com/hailin998/kimi-realmrouter-config/main/config_kimi_realmrouter.ps1 | iex
+```
+
+运行后会提示输入 RealmRouter API key。
+
+配置完成后可用：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File "$HOME\.kimi\kimi-rr.ps1"
+```
+
+或：
+
+```powershell
+$HOME\.kimi\kimi-rr.cmd
+```
