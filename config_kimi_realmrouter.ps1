@@ -1,10 +1,14 @@
+param(
+    [string]$ApiKey = ''
+)
+
 # Configure an existing Kimi CLI installation to use RealmRouter on Windows.
 # This script does NOT install Kimi CLI. It only configures it.
 #
 # Usage (PowerShell):
-#   irm https://raw.githubusercontent.com/hailin998/kimi-realmrouter-config/main/config_kimi_realmrouter.ps1 | iex
+#   $env:REALMROUTER_API_KEY='sk-xxx'; irm https://raw.githubusercontent.com/hailin998/kimi-realmrouter-config/main/config_kimi_realmrouter.ps1 | iex
 # or download then run:
-#   powershell -ExecutionPolicy Bypass -File .\config_kimi_realmrouter.ps1
+#   powershell -ExecutionPolicy Bypass -File .\config_kimi_realmrouter.ps1 -ApiKey 'sk-xxx'
 
 $ErrorActionPreference = 'Stop'
 
@@ -57,16 +61,26 @@ if (-not (Test-KimiInstalled)) {
     throw 'Kimi CLI is not installed. Please install Kimi CLI first, then run this script again.'
 }
 
-$apiKeySecure = Read-Host 'Enter your RealmRouter API key' -AsSecureString
-$apiKeyPlain = [System.Net.NetworkCredential]::new('', $apiKeySecure).Password
-
-if ([string]::IsNullOrWhiteSpace($apiKeyPlain)) {
+if ([string]::IsNullOrWhiteSpace($ApiKey)) {
+    $ApiKey = [System.Environment]::GetEnvironmentVariable('REALMROUTER_API_KEY', 'Process')
+}
+if ([string]::IsNullOrWhiteSpace($ApiKey)) {
+    $ApiKey = [System.Environment]::GetEnvironmentVariable('REALMROUTER_API_KEY', 'User')
+}
+if ([string]::IsNullOrWhiteSpace($ApiKey)) {
+    $ApiKey = [System.Environment]::GetEnvironmentVariable($envName, 'User')
+}
+if ([string]::IsNullOrWhiteSpace($ApiKey)) {
+    $secure = Read-Host 'Enter your RealmRouter API key' -AsSecureString
+    $ApiKey = [System.Net.NetworkCredential]::new('', $secure).Password
+}
+if ([string]::IsNullOrWhiteSpace($ApiKey)) {
     throw 'API key cannot be empty.'
 }
 
 Write-Host '[1/4] Storing API key in user environment variable...'
-[System.Environment]::SetEnvironmentVariable($envName, $apiKeyPlain, 'User')
-Set-Item -Path "Env:$envName" -Value $apiKeyPlain
+[System.Environment]::SetEnvironmentVariable($envName, $ApiKey, 'User')
+Set-Item -Path "Env:$envName" -Value $ApiKey
 
 Write-Host '[2/4] Writing ~/.kimi/config.toml ...'
 New-Item -ItemType Directory -Force -Path $configDir | Out-Null
