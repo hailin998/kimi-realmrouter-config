@@ -139,7 +139,7 @@ key = "oauth/kimi-code"
 [mcp.client]
 tool_call_timeout_ms = 60000
 "@
-Set-Content -Path $configFile -Value $config -Encoding UTF8
+[System.IO.File]::WriteAllText($configFile, $config, [System.Text.UTF8Encoding]::new($false))
 
 Write-Host '[3/4] Writing secure launcher...'
 New-Item -ItemType Directory -Force -Path $launcherDir | Out-Null
@@ -153,7 +153,7 @@ if ([string]::IsNullOrWhiteSpace(`$env:OPENAI_API_KEY)) {
 }
 & '$kimiCommand' `$args
 "@
-Set-Content -Path $launcherPath -Value $launcher -Encoding UTF8
+[System.IO.File]::WriteAllText($launcherPath, $launcher, [System.Text.UTF8Encoding]::new($false))
 
 $cmdShim = @"
 @echo off
