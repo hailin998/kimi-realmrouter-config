@@ -31,11 +31,18 @@ fi
 
 read_api_key() {
   local input=""
-  printf 'Enter your RealmRouter API key: ' >&2
-  stty -echo
-  IFS= read -r input
-  stty echo
-  printf '\n' >&2
+
+  if [[ -r /dev/tty ]]; then
+    printf 'Enter your RealmRouter API key: ' > /dev/tty
+    stty -echo < /dev/tty
+    IFS= read -r input < /dev/tty
+    stty echo < /dev/tty
+    printf '\n' > /dev/tty
+  else
+    echo "Cannot access /dev/tty for secure input."
+    echo "Please run the script in an interactive terminal."
+    exit 1
+  fi
 
   if [[ -z "$input" ]]; then
     echo "API key cannot be empty."
@@ -58,7 +65,7 @@ store_api_key_in_keychain() {
 write_kimi_config() {
   echo "[2/4] Writing ~/.kimi/config.toml ..."
   mkdir -p "$CONFIG_DIR"
-  cat > "$CONFIG_FILE" <<EOF
+  cat > "$CONFIG_FILE" <<EOF2
 default_model = "${MODEL_NAME}"
 default_thinking = true
 default_yolo = false
@@ -113,24 +120,40 @@ key = "oauth/kimi-code"
 
 [mcp.client]
 tool_call_timeout_ms = 60000
-EOF
+EOF2
 }
 
 write_wrapper() {
   echo "[3/4] Writing secure launcher..."
   mkdir -p "$(dirname "$WRAPPER_PATH")"
-  cat > "$WRAPPER_PATH" <<'EOF'
+  cat > "$WRAPPER_PATH" <<'EOF2'
 #!/usr/bin/env bash
 set -euo pipefail
 export OPENAI_BASE_URL="https://realmrouter.cn/v1"
 export OPENAI_API_KEY="$(security find-generic-password -a "$USER" -s "kimi-cli-realmrouter-openai" -w)"
 exec "$HOME/.local/bin/KIMI" "$@"
-EOF
+EOF2
   chmod +x "$WRAPPER_PATH"
+}
 
-  python3 - <<'PY'
+try_install_alias() {
+  local zshrc="${HOME}/.zshrc"
+  local start='# >>> kimi-realmrouter >>>'
+  local end='# <<< kimi-realmrouter <<<'
+  local tmp
+  tmp="$(mktemp)"
+
+  cat > "$tmp" <<'EOF2'
+# >>> kimi-realmrouter >>>
+alias KIMI='$HOME/.local/bin/kimi-rr'
+# <<< kimi-realmrouter <<<
+EOF2
+
+  if touch "$zshrc" 2>/dev/null; then
+    python3 - "$zshrc" <<'PY'
 from pathlib import Path
-p = Path.home() / '.zshrc'
+import sys
+p = Path(sys.argv[1])
 start = '# >>> kimi-realmrouter >>>'
 end = '# <<< kimi-realmrouter <<<'
 block = '''# >>> kimi-realmrouter >>>
@@ -148,6 +171,13 @@ else:
     text += '\n' + block
 p.write_text(text)
 PY
+    echo "Alias installed to ~/.zshrc"
+  else
+    echo "Skipped ~/.zshrc update (no permission)."
+    echo "You can still run Kimi with: $WRAPPER_PATH"
+  fi
+
+  rm -f "$tmp"
 }
 
 verify_config() {
@@ -169,9 +199,11 @@ API_KEY="$(read_api_key)"
 store_api_key_in_keychain "$API_KEY"
 write_kimi_config
 write_wrapper
+try_install_alias
 verify_config
 
 echo
 echo "Done."
-echo "Open a new terminal, then run: KIMI"
+echo "If alias installation was skipped, run: $WRAPPER_PATH"
+echo "Otherwise open a new terminal, then run: KIMI"
 echo "If current shell doesn't pick up the alias yet, run: source ~/.zshrc"
