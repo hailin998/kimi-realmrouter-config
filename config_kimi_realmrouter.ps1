@@ -71,8 +71,7 @@ if ([string]::IsNullOrWhiteSpace($ApiKey)) {
     $ApiKey = [System.Environment]::GetEnvironmentVariable($envName, 'User')
 }
 if ([string]::IsNullOrWhiteSpace($ApiKey)) {
-    $secure = Read-Host 'Enter your RealmRouter API key' -AsSecureString
-    $ApiKey = [System.Net.NetworkCredential]::new('', $secure).Password
+    $ApiKey = Read-Host 'Enter your RealmRouter API key'
 }
 if ([string]::IsNullOrWhiteSpace($ApiKey)) {
     throw 'API key cannot be empty.'

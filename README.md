@@ -14,7 +14,7 @@
 curl -fsSL https://raw.githubusercontent.com/hailin998/kimi-realmrouter-config/main/config_kimi_realmrouter.sh | bash
 ```
 
-运行后终端会提示输入你的 RealmRouter API key，输入回车即可。
+运行后终端会提示输入你的 RealmRouter API key（明文可见），输入回车即可。
 
 ### 本地执行
 
@@ -37,7 +37,7 @@ PowerShell 一键配置：
 irm https://raw.githubusercontent.com/hailin998/kimi-realmrouter-config/main/config_kimi_realmrouter.ps1 | iex
 ```
 
-运行后会提示输入 RealmRouter API key。
+运行后会提示输入 RealmRouter API key（明文可见输入）。
 
 配置完成后可用：
 
