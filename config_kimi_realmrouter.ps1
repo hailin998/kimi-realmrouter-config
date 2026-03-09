@@ -66,7 +66,7 @@ if ([string]::IsNullOrWhiteSpace($apiKeyPlain)) {
 
 Write-Host '[1/4] Storing API key in user environment variable...'
 [System.Environment]::SetEnvironmentVariable($envName, $apiKeyPlain, 'User')
-$env:$envName = $apiKeyPlain
+Set-Item -Path "Env:$envName" -Value $apiKeyPlain
 
 Write-Host '[2/4] Writing ~/.kimi/config.toml ...'
 New-Item -ItemType Directory -Force -Path $configDir | Out-Null
